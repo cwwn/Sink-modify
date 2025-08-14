@@ -33,8 +33,13 @@ export default eventHandler(async (event) => {
     link.slug = link.slug.toLowerCase()
   }
 
-  const { cloudflare } = event.context
-  const { KV } = cloudflare.env
+  const KV = event.context.cloudflare?.env?.KV || event.context.KV
+  if (!KV) {
+    throw createError({
+      status: 500,
+      statusText: 'KV namespace not found',
+    })
+  }
   const existingLink = await KV.get(`link:${link.slug}`)
   if (existingLink) {
     throw createError({
